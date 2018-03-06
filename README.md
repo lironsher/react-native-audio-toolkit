@@ -2,6 +2,15 @@
 
 [![npm version](https://badge.fury.io/js/react-native-audio-toolkit.svg)](https://badge.fury.io/js/react-native-audio-toolkit)
 
+***********
+
+This version has two more features:
+1. Pause
+2. Continue to record after iOS interruption. 
+
+***********
+
+
 This is a cross-platform (Android and iOS) audio library for React Native.
 Both audio playback and recording is supported. In addition to basic
 functionality, many useful features are implemented such as seeking,
