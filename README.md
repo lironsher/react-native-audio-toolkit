@@ -6,7 +6,7 @@
 
 This version has two more features:
 1. Pause
-2. Continue to record after iOS interruption. 
+2. Continue to record after iOS interruption. - Add code from : ( https://github.com/rs/SDAVAssetExportSession ) to support marge back to m4a.
 
 ***********
 
