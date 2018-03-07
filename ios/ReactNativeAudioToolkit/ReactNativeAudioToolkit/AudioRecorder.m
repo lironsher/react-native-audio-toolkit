@@ -33,7 +33,7 @@ NSString * _Nullable lastFilePath;
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
     [audioSession setActive:NO error:&error];
-   
+
     if (error) {
         NSLog (@"RCTAudioRecorder: Could not deactivate current audio session. Error: %@", error);
         return;
@@ -46,12 +46,12 @@ NSString * _Nullable lastFilePath;
     NSError *err = noErr;
     if ([notification.name isEqualToString:AVAudioSessionInterruptionNotification]) {
         seccReason = @"Interruption notification received";
-        
+
         //Check to see if it was a Begin interruption
         if ([[notification.userInfo valueForKey:AVAudioSessionInterruptionTypeKey] isEqualToNumber:[NSNumber numberWithInt:AVAudioSessionInterruptionTypeBegan]]) {
             seccReason = @"Interruption began";
             NSLog(@"Interruption notification name %@ audio pause", notification.name);
-           
+
             dispatch_time_t restartTime = dispatch_time(DISPATCH_TIME_NOW,
                                                         0.01 * NSEC_PER_SEC);
             dispatch_after(restartTime, dispatch_get_global_queue(0, 0), ^{
@@ -68,7 +68,7 @@ NSString * _Nullable lastFilePath;
                 }
                   NSLog(@"Interruption notification Pauseing recording status %d",recorder.isRecording);
             });
-            
+
         } else if([[notification.userInfo valueForKey:AVAudioSessionInterruptionTypeKey] isEqualToNumber:[NSNumber numberWithInt:AVAudioSessionInterruptionTypeEnded]]){
             seccReason = @"Interruption ended!";
              NSLog(@"Interruption notification name %@ audio resume", notification.name);
@@ -88,7 +88,7 @@ NSString * _Nullable lastFilePath;
                         NSError *error = nil;
                         recorder = [[AVAudioRecorder alloc] initWithURL:url settings:recordSetting error:&error];
                         if (![recorder record]) {
-                            NSLog(@"Interruption notification Error Resumeing recording %@",tempRecorder);
+                            NSLog(@"Interruption notification Error Resumeing recording");
                             return;
                         }
                         [[self recorderPool] setObject:recorder forKey:lastRecID];
@@ -157,11 +157,11 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
         callback(@[dict]);
         return;
     }
-    
+
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *filePath = [documentsDirectory stringByAppendingPathComponent:filename];
-    
+
     // Initialize audio session
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
@@ -169,10 +169,10 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
     if (error) {
         NSDictionary* dict = [Helpers errObjWithCode:@"preparefail" withMessage:@"Failed to set audio session category"];
         callback(@[dict]);
-        
+
         return;
     }
-    
+
     // Set audio session active
     [audioSession setActive:YES error:&error];
     if (error) {
@@ -180,24 +180,24 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
         NSDictionary* dict = [Helpers errObjWithCode:@"preparefail"
                                          withMessage:errMsg];
         callback(@[dict]);
-        
+
         return;
     }
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(audioSessionInterruptionNotification:)
                                                  name:AVAudioSessionInterruptionNotification
                                                object:audioSession];
-    
+
     // Settings for the recorder
     recordSetting = [Helpers recorderSettingsFromOptions:options];
-    
+
     [[self orgFileNames] setObject:filePath forKey:recorderId];
     //create temp file name
     NSMutableArray * fileNames = [NSMutableArray new];
     NSString *tmpFileName = [self gnrTempFileName:filePath AndNumber:fileNames.count];
     [fileNames addObject:tmpFileName];
     [[self fileNames] setObject:fileNames forKey:recorderId];
-    
+
     NSURL *url = [NSURL fileURLWithPath:tmpFileName];
     // Initialize a new recorder
     AVAudioRecorder *recorder = [[AVAudioRecorder alloc] initWithURL:url settings:recordSetting error:&error];
@@ -207,11 +207,11 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
                                          withMessage:errMsg];
         callback(@[dict]);
         return;
-        
+
     } else if (!recorder) {
         NSDictionary* dict = [Helpers errObjWithCode:@"preparefail" withMessage:@"Failed to initialize recorder"];
         callback(@[dict]);
-        
+
         return;
     }
     recorder.delegate = self;
@@ -225,7 +225,7 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
         callback(@[dict]);
         return;
     }
-    
+
     callback(@[[NSNull null], filePath]);
 }
 
@@ -237,7 +237,7 @@ RCT_EXPORT_METHOD(record:(nonnull NSNumber *)recorderId withCallback:(RCTRespons
             callback(@[dict]);
             return;
         }else {
-            
+
         }
     } else {
         NSDictionary* dict = [Helpers errObjWithCode:@"notfound" withMessage:@"Recorder with that id was not found"];
@@ -280,7 +280,7 @@ RCT_EXPORT_METHOD(stop:(nonnull NSNumber *)recorderId withCallback:(RCTResponseS
     AVMutableComposition *composition = [AVMutableComposition composition];
     AVMutableCompositionTrack *compositionAudioTrack =[AVMutableCompositionTrack alloc];
     compositionAudioTrack = [composition addMutableTrackWithMediaType:AVMediaTypeAudio preferredTrackID:kCMPersistentTrackID_Invalid];
-   
+
     float audioEndTime=0;
     for (NSString *fileName in filesNames) {
         NSURL *audioUrl = [NSURL fileURLWithPath:fileName];
@@ -297,19 +297,19 @@ RCT_EXPORT_METHOD(stop:(nonnull NSNumber *)recorderId withCallback:(RCTResponseS
 //        [compositionAudioTrack insertEmptyTimeRange:creditsRange];
 //        audioEndTime+=CMTimeGetSeconds(creditsDuration);
     }
-  
 
 
-  
-    
+
+
+
     NSURL *exportUrl = [NSURL fileURLWithPath:pathToSave];
-    
+
     float audioStartTime=0;
     CMTime startTime1 = CMTimeMake((int)(floor(audioStartTime * 100)), 100);
     CMTime stopTime = CMTimeMake((int)(ceil(audioEndTime * 100)), 100);
     CMTimeRange exportTimeRange = CMTimeRangeFromTimeToTime(startTime1, stopTime);
-    
-    
+
+
     SDAVAssetExportSession *encoder = [SDAVAssetExportSession.alloc initWithAsset:composition];
     encoder.outputFileType = AVFileTypeAppleM4A;
     encoder.outputURL = exportUrl;
@@ -399,7 +399,7 @@ RCT_EXPORT_METHOD(destroy:(nonnull NSNumber *)recorderId withCallback:(RCTRespon
 - (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder *)recorder
                                    error:(NSError *)error {
     NSNumber *recordId = [self keyForRecorder:recorder];
-    
+
     [self destroyRecorderWithId:recordId];
     NSString *eventName = [NSString stringWithFormat:@"RCTAudioRecorderEvent:%@", recordId];
     [self.bridge.eventDispatcher sendAppEventWithName:eventName
