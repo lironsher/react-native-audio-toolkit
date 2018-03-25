@@ -42,6 +42,15 @@
     if (formatString) {
         if ([formatString isEqualToString:@"ac3"]) {
             format = [NSNumber numberWithInt:kAudioFormatMPEG4AAC];
+        } else
+        if ([formatString isEqualToString:@"alaw"]) {
+            format = [NSNumber numberWithInt:kAudioFormatALaw];
+        } else
+        if ([formatString isEqualToString:@"ulaw"]) {
+            format = [NSNumber numberWithInt:kAudioFormatULaw];
+        } else
+        if ([formatString isEqualToString:@"pcm"]) {
+            format = [NSNumber numberWithInt:kAudioFormatLinearPCM];
         }
     }
     

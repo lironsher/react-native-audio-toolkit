@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		225ADF1A204DB7DC003F0185 /* SDAVAssetExportSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 225ADF18204DB7DB003F0185 /* SDAVAssetExportSession.m */; };
 		5E05F28D1D3E538600A0D09A /* Helpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E05F28C1D3E538600A0D09A /* Helpers.m */; };
 		5E21FB521D3FBD0B00A922AE /* ReactPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E21FB511D3FBD0B00A922AE /* ReactPlayer.m */; };
 		5E21FB671D40CF5300A922AE /* ReactPlayerItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 5E21FB661D40CF5300A922AE /* ReactPlayerItem.m */; };
@@ -27,6 +28,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		225ADF18204DB7DB003F0185 /* SDAVAssetExportSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDAVAssetExportSession.m; sourceTree = "<group>"; };
+		225ADF19204DB7DB003F0185 /* SDAVAssetExportSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDAVAssetExportSession.h; sourceTree = "<group>"; };
 		5E05F28B1D3E538600A0D09A /* Helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Helpers.h; sourceTree = "<group>"; };
 		5E05F28C1D3E538600A0D09A /* Helpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Helpers.m; sourceTree = "<group>"; };
 		5E21FB501D3FBD0B00A922AE /* ReactPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReactPlayer.h; sourceTree = "<group>"; };
@@ -70,6 +73,8 @@
 		5E8FD9851D269F5D00CF68CC /* ReactNativeAudioToolkit */ = {
 			isa = PBXGroup;
 			children = (
+				225ADF19204DB7DB003F0185 /* SDAVAssetExportSession.h */,
+				225ADF18204DB7DB003F0185 /* SDAVAssetExportSession.m */,
 				5E8FD98F1D269F9900CF68CC /* AudioPlayer.h */,
 				5E8FD9901D269F9900CF68CC /* AudioPlayer.m */,
 				5E8FD9911D269F9900CF68CC /* AudioRecorder.h */,
@@ -141,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5E21FB521D3FBD0B00A922AE /* ReactPlayer.m in Sources */,
+				225ADF1A204DB7DC003F0185 /* SDAVAssetExportSession.m in Sources */,
 				5E21FB671D40CF5300A922AE /* ReactPlayerItem.m in Sources */,
 				5E05F28D1D3E538600A0D09A /* Helpers.m in Sources */,
 				5E8FD9931D269F9900CF68CC /* AudioPlayer.m in Sources */,

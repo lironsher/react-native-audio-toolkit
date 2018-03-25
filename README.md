@@ -2,6 +2,11 @@
 
 [![npm version](https://badge.fury.io/js/react-native-audio-toolkit.svg)](https://badge.fury.io/js/react-native-audio-toolkit)
 
+
+***********
+
+Work in Progress - Use on Your Own Risk
+
 ***********
 
 This version has two more features:

@@ -1,11 +1,6 @@
 'use strict';
 
-import {
-  NativeModules,
-  DeviceEventEmitter,
-  NativeAppEventEmitter,
-  Platform
-} from 'react-native';
+import { NativeModules, DeviceEventEmitter, NativeAppEventEmitter, Platform } from 'react-native';
 
 import _ from 'lodash';
 import async from 'async';
@@ -17,7 +12,7 @@ var RCTAudioRecorder = NativeModules.AudioRecorder;
 var recorderId = 0;
 
 var defaultRecorderOptions = {
-  autoDestroy: true
+  autoDestroy: true,
 };
 
 /**
@@ -88,17 +83,17 @@ class Recorder extends EventEmitter {
 
     // Make sure recorder is prepared
     if (this._state === MediaStates.IDLE) {
-      tasks.push((next) => {
+      tasks.push(next => {
         this.prepare(next);
       });
     }
 
     // Start recording
-    tasks.push((next) => {
-        RCTAudioRecorder.record(this._recorderId, next);
+    tasks.push(next => {
+      RCTAudioRecorder.record(this._recorderId, next);
     });
 
-    async.series(tasks, (err) => {
+    async.series(tasks, err => {
       this._updateState(err, MediaStates.RECORDING);
       callback(err);
     });
@@ -108,7 +103,7 @@ class Recorder extends EventEmitter {
 
   stop(callback = _.noop) {
     if (this._state >= MediaStates.RECORDING) {
-      RCTAudioRecorder.stop(this._recorderId, (err) => {
+      RCTAudioRecorder.stop(this._recorderId, err => {
         this._updateState(err, MediaStates.DESTROYED);
         callback(err);
       });
@@ -121,7 +116,7 @@ class Recorder extends EventEmitter {
 
   pause(callback = _.noop) {
     if (this._state >= MediaStates.RECORDING) {
-      RCTAudioRecorder.pause(this._recorderId, (err) => {
+      RCTAudioRecorder.pause(this._recorderId, err => {
         this._updateState(err, MediaStates.PAUSED);
         callback(err);
       });
@@ -134,11 +129,11 @@ class Recorder extends EventEmitter {
 
   toggleRecord(callback = _.noop) {
     if (this._state === MediaStates.RECORDING) {
-      this.stop((err) => {
+      this.stop(err => {
         callback(err, true);
       });
     } else {
-      this.record((err) => {
+      this.record(err => {
         callback(err, false);
       });
     }
@@ -151,12 +146,28 @@ class Recorder extends EventEmitter {
     RCTAudioRecorder.destroy(this._recorderId, callback);
   }
 
-  get state()       { return this._state;                          }
-  get canRecord()   { return this._state >= MediaStates.PREPARED;  }
-  get canPrepare()  { return this._state == MediaStates.IDLE;      }
-  get isRecording() { return this._state == MediaStates.RECORDING; }
-  get isPrepared()  { return this._state == MediaStates.PREPARED;  }
-  get fsPath()      { return this._fsPath; }
+  get state() {
+    return this._state;
+  }
+  get canRecord() {
+    return this._state >= MediaStates.PREPARED;
+  }
+  get canPrepare() {
+    return this._state == MediaStates.IDLE;
+  }
+  get isRecording() {
+    return this._state == MediaStates.RECORDING;
+  }
+  get isPrepared() {
+    return this._state == MediaStates.PREPARED;
+  }
+  get fsPath() {
+    return this._fsPath;
+  }
+
+  static mergeAudioFiles({ folder, fileName }, callback) {
+    RCTAudioRecorder.mergeAudioFilesWithFileFolder(folder, fileName, callback);
+  }
 }
 
 export default Recorder;
