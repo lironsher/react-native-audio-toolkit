@@ -24,6 +24,7 @@
 
 @implementation AudioRecorder
 NSNumber *lastRecID;
+NSNumber *maxCallDur;
 NSDictionary *recordSetting;
 NSString * _Nullable orgFilePath;
 NSString * _Nullable lastFilePath;
@@ -78,27 +79,32 @@ NSString * _Nullable lastFilePath;
             dispatch_after(restartTime, dispatch_get_global_queue(0, 0), ^{
                 AVAudioRecorder *recorder = [[self recorderPool] objectForKey:lastRecID];
                 NSLog(@"Interruption notification Resumeing recording status %d",recorder.isRecording);
-                if (recorder) {
-                    if(!recorder.isRecording) {
-                        NSString *filePath = [[self orgFileNames] objectForKey:lastRecID];
-                        NSArray * fileNames =[[self fileNames] objectForKey:lastRecID];
-                        NSString *tmpFileName = [self gnrTempFileName:filePath AndNumber:fileNames.count];
-                        [[[self fileNames] objectForKey:lastRecID] addObject:tmpFileName];
-                        NSURL *url = [NSURL fileURLWithPath:tmpFileName];
-                        NSError *error = nil;
-                        recorder = [[AVAudioRecorder alloc] initWithURL:url settings:recordSetting error:&error];
-                        if (![recorder record]) {
-                            NSLog(@"Interruption notification Error Resumeing recording %@",recorder);
-                            return;
-                        }
-                        [[self recorderPool] setObject:recorder forKey:lastRecID];
-                        NSLog(@"Interruption notification nameResumeing recording %@",lastRecID);
-                    }else {
+                if (recorder)
+                {
+                    if(recorder.isRecording)
+                    {
                          NSLog(@"Interruption notification Already Recording %d",recorder.isRecording);
+                        return;
                     }
-                }else {
+                }
+                else
+                {
                     NSLog(@"Interruption notification name recording %@ not found",lastRecID);
                 }
+                    NSString *filePath = [[self orgFileNames] objectForKey:lastRecID];
+                    NSArray * fileNames =[[self fileNames] objectForKey:lastRecID];
+                    NSString *tmpFileName = [self gnrTempFileName:filePath AndNumber:fileNames.count];
+                    [[[self fileNames] objectForKey:lastRecID] addObject:tmpFileName];
+                    NSURL *url = [NSURL fileURLWithPath:tmpFileName];
+                    NSError *error = nil;
+                    recorder = [[AVAudioRecorder alloc] initWithURL:url settings:recordSetting error:&error];
+                    if (![recorder record]) {
+                        NSLog(@"Interruption notification Error Resumeing recording %@",recorder);
+                        return;
+                    }
+                    [[self recorderPool] setObject:recorder forKey:lastRecID];
+                    NSLog(@"Interruption notification nameResumeing recording %@",lastRecID);
+                  
             });
         }
     }
@@ -188,6 +194,11 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
                                                  name:AVAudioSessionInterruptionNotification
                                                object:audioSession];
     
+    //get maxdur from settings
+    maxCallDur = [options objectForKey:@"maxCallDur"];
+    if (maxCallDur==nil) {
+        maxCallDur= [NSNumber numberWithLong:9000000];
+    }
     // Settings for the recorder
     recordSetting = [Helpers recorderSettingsFromOptions:options];
     
@@ -232,7 +243,7 @@ RCT_EXPORT_METHOD(prepare:(nonnull NSNumber *)recorderId
 RCT_EXPORT_METHOD(record:(nonnull NSNumber *)recorderId withCallback:(RCTResponseSenderBlock)callback) {
     AVAudioRecorder *recorder = [[self recorderPool] objectForKey:recorderId];
     if (recorder) {
-        if (![recorder record]) {
+        if (![recorder recordForDuration:[maxCallDur doubleValue]]) {
             NSDictionary* dict = [Helpers errObjWithCode:@"startfail" withMessage:@"Failed to start recorder"];
             callback(@[dict]);
             return;
@@ -281,9 +292,15 @@ RCT_EXPORT_METHOD(mergeAudioFilesWithFileFolder:(NSString*)folder andFileName:(N
     NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsDirectory error:nil];
     NSArray *filesWithSelectedPrefix = [files filteredArrayUsingPredicate:
                                         [NSPredicate predicateWithFormat:@"self BEGINSWITH[cd] %@",filename]];
-    NSLog(@"%@", filesWithSelectedPrefix);
-    
-    NSDictionary* error = [self mergeAudioFilesWithFileNames:filesWithSelectedPrefix andPath:filePath];
+    NSLog(@"B%@", filesWithSelectedPrefix);
+    filesWithSelectedPrefix = [filesWithSelectedPrefix sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+    NSLog(@"A%@", filesWithSelectedPrefix);
+    NSMutableArray *fullFileNames = [NSMutableArray new];
+    for(int i=0;i< filesWithSelectedPrefix.count;i++) {
+      NSString* fullFileName = [documentsDirectory stringByAppendingPathComponent:[filesWithSelectedPrefix objectAtIndex:i]];
+        [fullFileNames addObject:fullFileName];
+    }
+    NSDictionary* error = [self mergeAudioFilesWithFileNames:fullFileNames andPath:filePath];
     NSDictionary *dict = @{
                           @"filepath": filePath,
                           @"filename": filename,
@@ -293,15 +310,18 @@ RCT_EXPORT_METHOD(mergeAudioFilesWithFileFolder:(NSString*)folder andFileName:(N
 
 -(NSDictionary *)mergeAudioFilesWithFileNames:(NSArray*) filesNames andPath:(NSString*) filePath {
     NSFileManager * fm = [[NSFileManager alloc] init];
-    __block NSDictionary* dict = NULL;
+    __block NSDictionary* dict = [NSNull null];
     NSError * error;
     NSString * pathToSave =[NSString stringWithFormat:@"%@%@",filePath,@".m4a"];
    //if only one file name - copy result
     if(filesNames.count==1) {
+        if([[filesNames objectAtIndex:0] isEqualToString:filePath]) {
+            return dict;
+        }
         BOOL result = [fm moveItemAtPath:[filesNames objectAtIndex:0] toPath:filePath error:&error];
         if(!result) {
             NSLog(@"Error: %@", error);
-            dict = [Helpers errObjWithCode:@"mergefailed" withMessage:error.description];
+            dict = [Helpers errObjWithCode:@"mergefailed1" withMessage:error.description];
             return dict;
         }
         return dict;
@@ -358,10 +378,10 @@ RCT_EXPORT_METHOD(mergeAudioFilesWithFileFolder:(NSString*)folder andFileName:(N
             BOOL result = [fm moveItemAtPath:pathToSave toPath:filePath error:&err];
             if(!result) {
                 NSLog(@"Error: %@", err);
-                dict = [Helpers errObjWithCode:@"mergefailed" withMessage:err.description];
+                dict = [Helpers errObjWithCode:@"mergefailed2" withMessage:err.description];
             } else {
                 NSLog(@"Audio Copied");
-                dict = NULL;
+                dict =  [NSNull null];
                 //cleanup
                 //            for (NSString *fileName in filesNames) {
                 //                [fm removeItemAtPath:fileName error:&err];
@@ -372,7 +392,7 @@ RCT_EXPORT_METHOD(mergeAudioFilesWithFileFolder:(NSString*)folder andFileName:(N
         else if (encoder.status == AVAssetExportSessionStatusCancelled)
         {
             NSLog(@"Audio export cancelled");
-             dict = [Helpers errObjWithCode:@"mergefailed" withMessage:@"Audio export cancelled"];
+             dict = [Helpers errObjWithCode:@"mergefailed3" withMessage:@"Audio export cancelled"];
         }
         else
         {
